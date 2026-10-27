@@ -28,7 +28,7 @@ pipeline {
         stage('4. Automated Integration Testing') {
             steps {
                 echo 'Executing Automated Verification Tests...'
-                sh 'sleep 3' // Wait for Node.js container startup
+                sh 'sleep 6' // Wait for Node.js container startup
                 sh 'python3 tests/test_app.py'
             }
         }
