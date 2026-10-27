@@ -9,6 +9,7 @@ def verify_app():
         html = response.read().decode('utf-8')
         
         print(f"DEBUG: Status Code Received -> {status_code}")
+        print(f"DEBUG: Actual HTML Snippet -> {html[:200]}")
         
         if status_code == 200 and "Container Monitoring System" in html:
             print("✅ Automated Test Passed: Application health check successful!")
