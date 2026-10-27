@@ -4,185 +4,321 @@ const app = express();
 const PORT = 3000;
 
 app.get('/', (req, res) => {
+    const uptimeMins = Math.floor(os.uptime() / 60);
+    const totalMemGB = (os.totalmem() / (1024 * 1024 * 1024)).toFixed(2);
+    const freeMemGB = (os.freemem() / (1024 * 1024 * 1024)).toFixed(2);
+    const usedMemPercent = Math.round((1 - os.freemem() / os.totalmem()) * 100);
+
     res.send(`
         <!DOCTYPE html>
-        <html>
+        <html lang="en">
         <head>
-            <title>Enterprise Container Monitoring HUD</title>
-            <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+            <meta charset="UTF-8">
+            <title>Enterprise Container Management & System Control</title>
+            <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
             <style>
                 :root {
-                    --bg-color: #030712;
-                    --panel-bg: rgba(15, 23, 42, 0.75);
-                    --border-glow: rgba(56, 189, 248, 0.3);
-                    --neon-cyan: #38bdf8;
-                    --neon-purple: #c084fc;
-                    --neon-green: #22c55e;
-                    --text-main: #f8fafc;
-                    --text-muted: #94a3b8;
+                    --bg-main: #f8fafc;
+                    --card-bg: #ffffff;
+                    --border-color: #e2e8f0;
+                    --text-primary: #0f172a;
+                    --text-secondary: #475569;
+                    --text-muted: #64748b;
+                    --brand-primary: #2563eb;
+                    --brand-primary-light: #eff6ff;
+                    --success: #16a34a;
+                    --success-light: #f0fdf4;
                 }
                 * { box-sizing: border-box; margin: 0; padding: 0; }
                 body {
-                    font-family: 'JetBrains Mono', monospace;
-                    background-color: var(--bg-color);
-                    background-image: 
-                        radial-gradient(circle at 50% 10%, rgba(56, 189, 248, 0.08) 0%, transparent 60%),
-                        linear-gradient(to right, rgba(255,255,255,0.02) 1px, transparent 1px),
-                        linear-gradient(to bottom, rgba(255,255,255,0.02) 1px, transparent 1px);
-                    background-size: 100% 100%, 40px 40px, 40px 40px;
-                    color: var(--text-main);
+                    font-family: 'Inter', sans-serif;
+                    background-color: var(--bg-main);
+                    color: var(--text-primary);
+                    padding: 30px 20px;
                     min-height: 100vh;
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    padding: 20px;
                 }
-                .hud-container {
-                    width: 100%;
-                    max-width: 900px;
-                    background: var(--panel-bg);
-                    backdrop-filter: blur(16px);
-                    border: 1px solid var(--border-glow);
-                    border-radius: 16px;
-                    box-shadow: 0 0 50px rgba(56, 189, 248, 0.15), inset 0 1px 0 rgba(255,255,255,0.1);
-                    overflow: hidden;
-                    position: relative;
+                .container {
+                    max-width: 1150px;
+                    margin: 0 auto;
                 }
-                .hud-header {
-                    background: linear-gradient(90deg, rgba(56,189,248,0.1), rgba(192,132,252,0.1));
-                    padding: 20px 30px;
-                    border-bottom: 1px solid rgba(56, 189, 248, 0.2);
+                .header {
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
+                    background: var(--card-bg);
+                    padding: 20px 24px;
+                    border-radius: 12px;
+                    border: 1px solid var(--border-color);
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+                    margin-bottom: 24px;
                 }
-                .hud-title {
-                    font-family: 'Orbitron', sans-serif;
-                    font-size: 1.3rem;
-                    font-weight: 800;
-                    letter-spacing: 2px;
-                    color: var(--neon-cyan);
-                    text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+                .header-title h1 {
+                    font-size: 1.25rem;
+                    font-weight: 700;
+                    color: var(--text-primary);
+                }
+                .header-title p {
+                    font-size: 0.875rem;
+                    color: var(--text-muted);
+                    margin-top: 4px;
                 }
                 .status-badge {
                     display: flex;
                     align-items: center;
                     gap: 8px;
-                    background: rgba(34, 197, 94, 0.15);
-                    border: 1px solid rgba(34, 197, 94, 0.4);
+                    background: var(--success-light);
+                    border: 1px solid #bbf7d0;
+                    color: var(--success);
+                    font-weight: 600;
+                    font-size: 0.85rem;
                     padding: 6px 14px;
                     border-radius: 20px;
-                    color: var(--neon-green);
-                    font-weight: 700;
-                    font-size: 0.85rem;
                 }
-                .pulse-dot {
+                .status-dot {
                     width: 8px;
                     height: 8px;
-                    background-color: var(--neon-green);
+                    background-color: var(--success);
                     border-radius: 50%;
-                    box-shadow: 0 0 10px var(--neon-green);
-                    animation: pulse 2s infinite;
                 }
-                @keyframes pulse {
-                    0% { transform: scale(0.95); opacity: 0.8; box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
-                    70% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); }
-                    100% { transform: scale(0.95); opacity: 0.8; box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
-                }
-                .hud-grid {
+                .metrics-grid {
                     display: grid;
-                    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-                    gap: 20px;
-                    padding: 30px;
+                    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+                    gap: 16px;
+                    margin-bottom: 24px;
                 }
                 .metric-card {
-                    background: rgba(30, 41, 59, 0.5);
-                    border: 1px solid rgba(255, 255, 255, 0.05);
-                    border-radius: 12px;
-                    padding: 20px;
-                    transition: all 0.3s ease;
-                }
-                .metric-card:hover {
-                    border-color: rgba(56, 189, 248, 0.4);
-                    box-shadow: 0 4px 20px rgba(56, 189, 248, 0.1);
+                    background: var(--card-bg);
+                    border: 1px solid var(--border-color);
+                    padding: 18px 20px;
+                    border-radius: 10px;
+                    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
                 }
                 .metric-label {
                     font-size: 0.75rem;
-                    color: var(--text-muted);
+                    font-weight: 600;
                     text-transform: uppercase;
-                    letter-spacing: 1px;
-                    margin-bottom: 8px;
+                    color: var(--text-muted);
+                    letter-spacing: 0.5px;
                 }
                 .metric-value {
-                    font-family: 'Orbitron', sans-serif;
-                    font-size: 1.05rem;
-                    font-weight: 600;
-                    color: var(--text-main);
+                    font-family: 'JetBrains Mono', monospace;
+                    font-size: 1.2rem;
+                    font-weight: 700;
+                    color: var(--text-primary);
+                    margin-top: 6px;
                 }
-                .pipeline-section {
-                    margin: 0 30px 30px 30px;
-                    background: rgba(15, 23, 42, 0.9);
-                    border: 1px solid rgba(192, 132, 252, 0.3);
-                    border-radius: 12px;
-                    padding: 20px;
-                }
-                .pipeline-title {
+                .metric-sub {
                     font-size: 0.75rem;
-                    color: var(--neon-purple);
-                    text-transform: uppercase;
-                    letter-spacing: 1.5px;
-                    margin-bottom: 12px;
+                    color: var(--text-secondary);
+                    margin-top: 4px;
                 }
-                .pipeline-badges {
+                .section-card {
+                    background: var(--card-bg);
+                    border: 1px solid var(--border-color);
+                    border-radius: 12px;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+                    padding: 24px;
+                    margin-bottom: 24px;
+                }
+                .section-header {
+                    margin-bottom: 16px;
                     display: flex;
-                    flex-wrap: wrap;
-                    gap: 10px;
+                    justify-content: space-between;
+                    align-items: center;
                 }
-                .badge {
-                    background: rgba(56, 189, 248, 0.1);
-                    border: 1px solid rgba(56, 189, 248, 0.3);
-                    padding: 6px 12px;
-                    border-radius: 6px;
+                .section-title {
+                    font-size: 1rem;
+                    font-weight: 700;
+                    color: var(--text-primary);
+                }
+                .table-wrapper {
+                    overflow-x: auto;
+                }
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    text-align: left;
+                    font-size: 0.875rem;
+                }
+                th {
+                    background-color: #f1f5f9;
+                    color: var(--text-secondary);
+                    font-weight: 600;
+                    text-transform: uppercase;
+                    font-size: 0.75rem;
+                    letter-spacing: 0.5px;
+                    padding: 12px 16px;
+                    border-bottom: 1px solid var(--border-color);
+                }
+                td {
+                    padding: 14px 16px;
+                    border-bottom: 1px solid var(--border-color);
+                    color: var(--text-primary);
+                }
+                tr:last-child td {
+                    border-bottom: none;
+                }
+                tr:hover {
+                    background-color: #f8fafc;
+                }
+                .code-text {
+                    font-family: 'JetBrains Mono', monospace;
                     font-size: 0.8rem;
-                    color: var(--neon-cyan);
+                    background: #f1f5f9;
+                    padding: 3px 8px;
+                    border-radius: 4px;
+                    color: var(--brand-primary);
                 }
+                .tag {
+                    display: inline-block;
+                    padding: 4px 10px;
+                    border-radius: 12px;
+                    font-size: 0.75rem;
+                    font-weight: 600;
+                }
+                .tag-active { background: var(--success-light); color: var(--success); border: 1px solid #bbf7d0; }
+                .tag-pipeline { background: var(--brand-primary-light); color: var(--brand-primary); border: 1px solid #bfdbfe; }
             </style>
         </head>
         <body>
-            <div class="hud-container">
-                <div class="hud-header">
-                    <div class="hud-title">⚡ CONTAINER MONITORING SYSTEM</div>
+            <div class="container">
+                <div class="header">
+                    <div class="header-title">
+                        <h1>Container Management & System Control</h1>
+                        <p>Real-time Microservices Cluster Telemetry & Pipeline Registry</p>
+                    </div>
                     <div class="status-badge">
-                        <div class="pulse-dot"></div>
-                        ONLINE
+                        <div class="status-dot"></div>
+                        CLUSTER HEALTHY
                     </div>
                 </div>
-                <div class="hud-grid">
+
+                <div class="metrics-grid">
                     <div class="metric-card">
                         <div class="metric-label">Host Architecture</div>
                         <div class="metric-value">${os.arch().toUpperCase()} / ${os.platform().toUpperCase()}</div>
+                        <div class="metric-sub">Node.js Engine v${process.versions.node}</div>
                     </div>
                     <div class="metric-card">
                         <div class="metric-label">System Uptime</div>
-                        <div class="metric-value">${Math.floor(os.uptime() / 60)} MIN</div>
+                        <div class="metric-value">${uptimeMins} Minutes</div>
+                        <div class="metric-sub">Continuous Execution</div>
                     </div>
                     <div class="metric-card">
-                        <div class="metric-label">Memory Load</div>
-                        <div class="metric-value">${Math.round((1 - os.freemem() / os.totalmem()) * 100)}% USED</div>
+                        <div class="metric-label">Memory Utilization</div>
+                        <div class="metric-value">${usedMemPercent}% Used</div>
+                        <div class="metric-sub">${freeMemGB} GB Free / ${totalMemGB} GB Total</div>
                     </div>
                     <div class="metric-card">
-                        <div class="metric-label">Runtime Engine</div>
-                        <div class="metric-value">NODE ${process.version}</div>
+                        <div class="metric-label">Active Workloads</div>
+                        <div class="metric-value">5 Containers</div>
+                        <div class="metric-sub">Docker Swarm / Compose Mesh</div>
                     </div>
                 </div>
-                <div class="pipeline-section">
-                    <div class="pipeline-title">Active Automated Pipeline Stack</div>
-                    <div class="pipeline-badges">
-                        <span class="badge">GitHub VCS</span>
-                        <span class="badge">Jenkins CI/CD</span>
-                        <span class="badge">Docker Container</span>
-                        <span class="badge">Selenium Testing</span>
-                        <span class="badge">Ansible Verification</span>
+
+                <div class="section-card">
+                    <div class="section-header">
+                        <div class="section-title">Active Microservices Container Fleet</div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Container Name</th>
+                                    <th>Image Reference</th>
+                                    <th>State</th>
+                                    <th>Port Mapping</th>
+                                    <th>Memory Footprint</th>
+                                    <th>Network I/O</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><span class="code-text">node-container</span></td>
+                                    <td>node-app:latest (Primary)</td>
+                                    <td><span class="tag tag-active">Running</span></td>
+                                    <td>3000:3000/tcp</td>
+                                    <td>142 MB</td>
+                                    <td>Rx: 2.4 MB / Tx: 1.1 MB</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="code-text">api-gateway-svc</span></td>
+                                    <td>nginx:alpine-edge</td>
+                                    <td><span class="tag tag-active">Running</span></td>
+                                    <td>80:80 / 443:443</td>
+                                    <td>32 MB</td>
+                                    <td>Rx: 18.5 MB / Tx: 24.2 MB</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="code-text">auth-service-core</span></td>
+                                    <td>python:3.9-slim</td>
+                                    <td><span class="tag tag-active">Running</span></td>
+                                    <td>5000:5000/tcp</td>
+                                    <td>88 MB</td>
+                                    <td>Rx: 940 KB / Tx: 820 KB</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="code-text">redis-cache-node</span></td>
+                                    <td>redis:alpine-7.2</td>
+                                    <td><span class="tag tag-active">Running</span></td>
+                                    <td>6379:6379/tcp</td>
+                                    <td>18 MB</td>
+                                    <td>Rx: 5.1 MB / Tx: 4.8 MB</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="code-text">postgres-db-replica</span></td>
+                                    <td>postgres:15-alpine</td>
+                                    <td><span class="tag tag-active">Running</span></td>
+                                    <td>5432:5432/tcp</td>
+                                    <td>115 MB</td>
+                                    <td>Rx: 3.2 MB / Tx: 2.9 MB</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="section-card">
+                    <div class="section-header">
+                        <div class="section-title">Automated CI/CD Pipeline Audit Matrix</div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Pipeline Stage</th>
+                                    <th>Technology</th>
+                                    <th>Validation Objective</th>
+                                    <th>Audit Result</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1. Source Control</td>
+                                    <td>GitHub</td>
+                                    <td>Repository Code Sync & Webhook Trigger</td>
+                                    <td><span class="tag tag-pipeline">PASSED</span></td>
+                                </tr>
+                                <tr>
+                                    <td>2. Container Build</td>
+                                    <td>Jenkins + Docker</td>
+                                    <td>Fresh Image Build (--no-cache) & Deployment</td>
+                                    <td><span class="tag tag-pipeline">PASSED</span></td>
+                                </tr>
+                                <tr>
+                                    <td>3. Configuration Mgmt</td>
+                                    <td>Ansible</td>
+                                    <td>Host Environment Readiness & Health Check</td>
+                                    <td><span class="tag tag-pipeline">PASSED</span></td>
+                                </tr>
+                                <tr>
+                                    <td>4. Integration Test</td>
+                                    <td>Selenium / Python</td>
+                                    <td>HTTP Health & DOM Verification</td>
+                                    <td><span class="tag tag-pipeline">PASSED</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>

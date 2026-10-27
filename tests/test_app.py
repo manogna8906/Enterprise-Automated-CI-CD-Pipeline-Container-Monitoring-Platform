@@ -10,9 +10,9 @@ def verify_app():
         
         print(f"DEBUG: Status Code Received -> {status_code}")
         
-        # Match the new futuristic HUD title
-        if status_code == 200 and "Enterprise Container Monitoring HUD" in html:
-            print("✅ Automated Test Passed: Container Monitoring HUD is live and operational!")
+        # Match the new microservices dashboard title
+        if status_code == 200 and "Enterprise Container Management & System Control" in html:
+            print("✅ Automated Test Passed: Microservices Fleet Dashboard is live and operational!")
             sys.exit(0)
         else:
             print("❌ Automated Test Failed: Unexpected content or status code.")
