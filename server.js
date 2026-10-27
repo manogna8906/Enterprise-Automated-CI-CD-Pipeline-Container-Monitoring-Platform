@@ -18,7 +18,7 @@ app.get('/', (req, res) => {
         </head>
         <body>
             <div class="card">
-                <h1>🚀 Automated Container Monitoring System</h1>
+                <h1>🚀 Container Monitoring System</h1>
                 <p>Status: <span class="badge">ONLINE</span></p>
                 <p>Host Architecture: <strong>${os.arch()}</strong></p>
                 <p>System Uptime: <strong>${Math.floor(os.uptime() / 60)} minutes</strong></p>
