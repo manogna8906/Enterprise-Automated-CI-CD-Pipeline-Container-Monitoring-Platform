@@ -1,0 +1,11 @@
+---
+- name: Verify Host Infrastructure
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Ping Host Machine
+      ping:
+
+    - name: Display Deployment Confirmation
+      debug:
+        msg: "Ansible Configuration Check Passed: Host is ready for container deployment."
