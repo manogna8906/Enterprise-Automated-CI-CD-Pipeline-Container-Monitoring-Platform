@@ -9,10 +9,8 @@ def verify_app():
         html = response.read().decode('utf-8')
         
         print(f"DEBUG: Status Code Received -> {status_code}")
-        print(f"DEBUG: Page Content Snippet -> {html[:150]}...")
         
-        # Match the text actually rendered by server.js
-        if status_code == 200 and "Hello from Automated CI/CD Pipeline" in html:
+        if status_code == 200 and "Container Monitoring System" in html:
             print("✅ Automated Test Passed: Application health check successful!")
             sys.exit(0)
         else:
