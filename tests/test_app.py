@@ -9,10 +9,10 @@ def verify_app():
         html = response.read().decode('utf-8')
         
         print(f"DEBUG: Status Code Received -> {status_code}")
-        print(f"DEBUG: Actual HTML Snippet -> {html[:200]}")
         
-        if status_code == 200 and "Container Monitoring System" in html:
-            print("✅ Automated Test Passed: Application health check successful!")
+        # Match the new futuristic HUD title
+        if status_code == 200 and "Enterprise Container Monitoring HUD" in html:
+            print("✅ Automated Test Passed: Container Monitoring HUD is live and operational!")
             sys.exit(0)
         else:
             print("❌ Automated Test Failed: Unexpected content or status code.")
