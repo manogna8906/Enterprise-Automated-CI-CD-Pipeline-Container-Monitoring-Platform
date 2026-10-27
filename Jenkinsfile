@@ -10,7 +10,9 @@ pipeline {
         }
 
         stage('2. Build & Deploy Container') {
-            steps {
+           steps {
+                echo 'Checking server.js content in workspace:'
+                sh 'cat server.js'
                 echo 'Building fresh Docker container...'
                 sh 'docker rm -f node-container || true'
                 sh 'docker build --no-cache -t node-app:latest .'
