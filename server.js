@@ -151,7 +151,7 @@ app.get('/', (req, res) => {
         <body>
             <div class="hud-container">
                 <div class="hud-header">
-                    <div class="hud-title">⚡ CONTAINER MONITORING HUD</div>
+                    <div class="hud-title">⚡ CONTAINER MONITORING SYSTEM</div>
                     <div class="status-badge">
                         <div class="pulse-dot"></div>
                         ONLINE
