@@ -184,7 +184,7 @@ app.get('/', (req, res) => {
             <div class="container">
                 <div class="header">
                     <div class="header-title">
-                        <h1>Container Management & system control site </h1>
+                        <h1>Container Management & system control interface </h1>
                         <p>Real-time Microservices Cluster Telemetry & Pipeline Registry</p>
                     </div>
                     <div class="status-badge">
